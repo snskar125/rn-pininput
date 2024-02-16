@@ -1,9 +1,9 @@
-# rn-pininput
+# @snskar125/rn-pininput
 Customizable PIN Input Component for React Native
 
 ## Usage
 ```javascript
-import PINInput from 'rn-pininput'
+import PINInput from '@snskar125/rn-pininput'
 import { useState } from 'react'
 export default function App(){
     const [ value, setValue ] = useState("")

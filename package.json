@@ -1,5 +1,5 @@
 {
-  "name": "rn-pininput",
+  "name": "@snskar125/rn-pininput",
   "version": "1.0.0",
   "description": "Customizable PIN Input Component for React Native",
   "main": "index.js",
