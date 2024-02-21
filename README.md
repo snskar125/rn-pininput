@@ -15,7 +15,7 @@ export default function App(){
 ## Props
 Prop | Type
 --- | ---
-value | String / Number
+value | String
 onChangeValue | Function
 numberOfDigits | Number
 containerStyle | View Style
@@ -23,3 +23,5 @@ textStyle | Text Style
 inputBoxStyle | View Style
 focusedInputBoxStyle | View Style
 hidden | Boolean
+onPressInput | Function
+hiddenCharacter | String

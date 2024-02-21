@@ -1,4 +1,4 @@
-import { memo, useRef } from "react";
+import { memo, useCallback, useRef, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,8 +6,26 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+const Cell = memo((props) => (
+  <TouchableWithoutFeedback
+    onPress={() => {
+      props.onPress(props.index);
+    }}
+  >
+    <View
+      style={
+        props.isFocused
+          ? [styles.focusedInputBox, props.focusedInputBoxStyle]
+          : [styles.inputBox, props.inputBoxStyle]
+      }
+    >
+      <Text style={[styles.text, props.textStyle]}>{props.character}</Text>
+    </View>
+  </TouchableWithoutFeedback>
+));
 const PINInput = memo((props) => {
   const input = useRef();
+  const [focused, setFocused] = useState("");
   const {
     value: inputValue,
     onChangeValue,
@@ -16,42 +34,62 @@ const PINInput = memo((props) => {
     inputBoxStyle,
     focusedInputBoxStyle,
     textStyle,
+    onBlur,
+    onFocus,
+    onPressInput,
     hidden,
+    hiddenCharacter,
   } = props;
   const value = inputValue?.toString();
   const handleTextChange = (text) => {
     if (text.length <= numberOfDigits) onChangeValue(text);
     if (text.length === numberOfDigits) input.current?.blur();
   };
+  const handleBlur = (e) => {
+    onBlur(e);
+    setFocused(false);
+  };
+  const handleFocus = (e) => {
+    onFocus(e);
+    setFocused(true);
+  };
+  const handlePress = useCallback((index) => {
+    onPressInput(index);
+    if (input.current?.isFocused()) input.current?.blur();
+    input.current?.focus();
+  }, []);
   return (
     <View style={[styles.container, containerStyle]}>
       <TextInput
         keyboardType="number-pad"
         value={value}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         onChangeText={handleTextChange}
         ref={input}
         style={styles.hidden}
       />
       {[...Array(numberOfDigits).keys()].map((_, index) => (
-        <TouchableWithoutFeedback
-          onPress={() => {
-            if (input.current?.isFocused()) input.current?.blur();
-            input.current?.focus();
-          }}
+        <Cell
           key={index}
-        >
-          <View
-            style={
-              value.length === index
-                ? [styles.focusedInputBox, focusedInputBoxStyle]
-                : [styles.inputBox, inputBoxStyle]
-            }
-          >
-            <Text style={[styles.text, textStyle]}>
-              {value.charAt(index) ? (hidden ? "•" : value.charAt(index)) : ""}
-            </Text>
-          </View>
-        </TouchableWithoutFeedback>
+          onPress={handlePress}
+          isFocused={
+            focused &&
+            (value.length === index ||
+              (value.length === numberOfDigits && index === numberOfDigits - 1))
+          }
+          inputBoxStyle={inputBoxStyle}
+          focusedInputBoxStyle={focusedInputBoxStyle}
+          textStyle={textStyle}
+          character={
+            value.charAt(index)
+              ? hidden
+                ? hiddenCharacter
+                : value.charAt(index)
+              : ""
+          }
+          index={index}
+        />
       ))}
     </View>
   );
@@ -97,10 +135,14 @@ PINInput.defaultProps = {
   numberOfDigits: 4,
   value: "",
   onChangeValue: () => {},
+  onFocus: () => {},
+  onBlur: () => {},
+  onPressInput: () => {},
   containerStyle: {},
   textStyle: {},
   inputBoxStyle: {},
   focusedInputBoxStyle: {},
   hidden: false,
+  hiddenCharacter: "⨀",
 };
 export default PINInput;
