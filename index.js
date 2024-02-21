@@ -1,4 +1,4 @@
-import { memo, useCallback, useRef, useState } from "react";
+import { PureComponent, memo } from "react";
 import {
   StyleSheet,
   Text,
@@ -23,82 +23,100 @@ const Cell = memo((props) => (
     </View>
   </TouchableWithoutFeedback>
 ));
-const PINInput = memo((props) => {
-  const input = useRef();
-  const [focused, setFocused] = useState("");
-  const {
-    value: inputValue,
-    onChangeValue,
-    containerStyle,
-    numberOfDigits,
-    inputBoxStyle,
-    focusedInputBoxStyle,
-    textStyle,
-    onBlur,
-    onFocus,
-    onPressInput,
-    hidden,
-    hiddenCharacter,
-  } = props;
-  const value = inputValue?.toString();
-  const handleTextChange = (text) => {
-    if (text.length <= numberOfDigits) onChangeValue(text);
-    if (text.length === numberOfDigits) input.current?.blur();
+export default class PINInput extends PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {
+      focused: false,
+    };
+    this.input = null;
+    this.handleBlur = this.handleBlur.bind(this);
+    this.handleFocus = this.handleFocus.bind(this);
+    this.handlePress = this.handlePress.bind(this);
+    this.handleTextChange = this.handleTextChange.bind(this);
+    this.focus = this.focus.bind(this);
+    this.blur = this.blur.bind(this);
+  }
+  handleTextChange = (text) => {
+    if (text.length <= this.props.numberOfDigits)
+      this.props.onChangeValue(text);
+    if (text.length === this.props.numberOfDigits) this.input?.blur();
   };
-  const handleBlur = (e) => {
-    onBlur(e);
-    setFocused(false);
+  handleBlur = () => {
+    this.setState({ focused: false });
   };
-  const handleFocus = (e) => {
-    onFocus(e);
-    setFocused(true);
+  handleFocus = () => {
+    this.setState({ focused: true });
   };
-  const handlePress = useCallback((index) => {
-    onPressInput(index);
-    if (input.current?.isFocused()) input.current?.blur();
-    input.current?.focus();
-  }, []);
-  return (
-    <View style={[styles.container, containerStyle]}>
-      <TextInput
-        keyboardType="number-pad"
-        value={value}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        onChangeText={handleTextChange}
-        ref={input}
-        style={styles.hidden}
-      />
-      {[...Array(numberOfDigits).keys()].map((_, index) => (
-        <Cell
-          key={index}
-          onPress={handlePress}
-          isFocused={
-            focused &&
-            (value.length === index ||
-              (value.length === numberOfDigits && index === numberOfDigits - 1))
-          }
-          inputBoxStyle={inputBoxStyle}
-          focusedInputBoxStyle={focusedInputBoxStyle}
-          textStyle={textStyle}
-          character={
-            value.charAt(index)
-              ? hidden
-                ? hiddenCharacter
-                : value.charAt(index)
-              : ""
-          }
-          index={index}
+  handlePress = (index) => {
+    this.props.onPressInput(index);
+    if (this.input?.isFocused()) this.input?.blur();
+    this.input?.focus();
+  };
+  focus = () => {
+    this.input?.focus();
+  };
+  blur = () => {
+    this.input?.blur();
+  };
+  render() {
+    const {
+      value,
+      containerStyle,
+      numberOfDigits,
+      inputBoxStyle,
+      focusedInputBoxStyle,
+      textStyle,
+      hidden,
+      hiddenCharacter,
+    } = this.props;
+    return (
+      <View style={[styles.container, containerStyle]}>
+        <TextInput
+          keyboardType="number-pad"
+          secureTextEntry
+          value={value}
+          onFocus={this.handleFocus}
+          onBlur={this.handleBlur}
+          onChangeText={this.handleTextChange}
+          ref={(r) => {
+            this.input = r;
+          }}
+          style={styles.hidden}
         />
-      ))}
-    </View>
-  );
-});
+        {[...Array(numberOfDigits).keys()].map((_, index) => (
+          <Cell
+            key={index}
+            onPress={this.handlePress}
+            isFocused={
+              this.state.focused &&
+              (value.length === index ||
+                (value.length === numberOfDigits &&
+                  index === numberOfDigits - 1))
+            }
+            inputBoxStyle={inputBoxStyle}
+            focusedInputBoxStyle={focusedInputBoxStyle}
+            textStyle={textStyle}
+            character={
+              value.charAt(index)
+                ? hidden
+                  ? hiddenCharacter
+                  : value.charAt(index)
+                : ""
+            }
+            index={index}
+          />
+        ))}
+      </View>
+    );
+  }
+}
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    padding: 10,
     gap: 10,
   },
   inputBox: {
@@ -135,8 +153,6 @@ PINInput.defaultProps = {
   numberOfDigits: 4,
   value: "",
   onChangeValue: () => {},
-  onFocus: () => {},
-  onBlur: () => {},
   onPressInput: () => {},
   containerStyle: {},
   textStyle: {},
@@ -145,4 +161,3 @@ PINInput.defaultProps = {
   hidden: false,
   hiddenCharacter: "⨀",
 };
-export default PINInput;
