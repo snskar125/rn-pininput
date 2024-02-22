@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "FAFAFA",
+    backgroundColor: "#FFF",
   },
   text: {
     fontSize: 23,
