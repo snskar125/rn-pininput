@@ -1,28 +1,56 @@
-import { PureComponent, memo } from "react";
+import { PureComponent, memo, useEffect, useRef } from "react";
 import {
+  Animated,
   StyleSheet,
   Text,
   TextInput,
   TouchableWithoutFeedback,
-  View,
 } from "react-native";
-const Cell = memo((props) => (
-  <TouchableWithoutFeedback
-    onPress={() => {
-      props.onPress(props.index);
-    }}
-  >
-    <View
-      style={
-        props.isFocused
-          ? [styles.focusedInputBox, props.focusedInputBoxStyle]
-          : [styles.inputBox, props.inputBoxStyle]
-      }
+const Cell = memo((props) => {
+  const scale = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    if (props.character && props.animated) {
+      Animated.sequence([
+        Animated.timing(scale, {
+          toValue: 1.1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 0.9,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scale, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [props.character]);
+  return (
+    <TouchableWithoutFeedback
+      onPress={() => {
+        props.onPress(props.index);
+      }}
     >
-      <Text style={[styles.text, props.textStyle]}>{props.character}</Text>
-    </View>
-  </TouchableWithoutFeedback>
-));
+      <Animated.View
+        style={
+          props.isFocused
+            ? [
+                styles.focusedInputBox,
+                props.focusedInputBoxStyle,
+                { transform: [{ scale }] },
+              ]
+            : [styles.inputBox, props.inputBoxStyle, { transform: [{ scale }] }]
+        }
+      >
+        <Text style={[styles.text, props.textStyle]}>{props.character}</Text>
+      </Animated.View>
+    </TouchableWithoutFeedback>
+  );
+});
 export default class PINInput extends PureComponent {
   constructor(props) {
     super(props);
@@ -36,6 +64,8 @@ export default class PINInput extends PureComponent {
     this.handleTextChange = this.handleTextChange.bind(this);
     this.focus = this.focus.bind(this);
     this.blur = this.blur.bind(this);
+    this.shake = this.shake.bind(this);
+    this.translateX = new Animated.Value(0);
   }
   handleTextChange = (text) => {
     if (text.length <= this.props.numberOfDigits)
@@ -59,6 +89,35 @@ export default class PINInput extends PureComponent {
   blur = () => {
     this.input?.blur();
   };
+  shake = () => {
+    Animated.sequence([
+      Animated.timing(this.translateX, {
+        toValue: -10,
+        duration: 75,
+        useNativeDriver: true,
+      }),
+      Animated.timing(this.translateX, {
+        toValue: 10,
+        duration: 75,
+        useNativeDriver: true,
+      }),
+      Animated.timing(this.translateX, {
+        toValue: -10,
+        duration: 75,
+        useNativeDriver: true,
+      }),
+      Animated.timing(this.translateX, {
+        toValue: 10,
+        duration: 75,
+        useNativeDriver: true,
+      }),
+      Animated.timing(this.translateX, {
+        toValue: 0,
+        duration: 75,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
   render() {
     const {
       value,
@@ -69,9 +128,16 @@ export default class PINInput extends PureComponent {
       textStyle,
       hidden,
       hiddenCharacter,
+      animated,
     } = this.props;
     return (
-      <View style={[styles.container, containerStyle]}>
+      <Animated.View
+        style={[
+          styles.container,
+          containerStyle,
+          { transform: [{ translateX: this.translateX }] },
+        ]}
+      >
         <TextInput
           keyboardType="number-pad"
           secureTextEntry
@@ -87,6 +153,7 @@ export default class PINInput extends PureComponent {
         {[...Array(numberOfDigits).keys()].map((_, index) => (
           <Cell
             key={index}
+            animated={animated}
             onPress={this.handlePress}
             isFocused={
               this.state.focused &&
@@ -107,7 +174,7 @@ export default class PINInput extends PureComponent {
             index={index}
           />
         ))}
-      </View>
+      </Animated.View>
     );
   }
 }
@@ -160,4 +227,5 @@ PINInput.defaultProps = {
   focusedInputBoxStyle: {},
   hidden: false,
   hiddenCharacter: "⨀",
+  animated: true,
 };

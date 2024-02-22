@@ -25,7 +25,9 @@ focusedInputBoxStyle | View Style
 hidden | Boolean
 onPressInput | Function
 hiddenCharacter | String
+animated | Boolean
 
 ## Methods
 focus()<br>
-blur()
+blur()<br>
+shake()
